@@ -288,6 +288,10 @@ class Dalai {
     }
   }
   async install(core, ...models) {
+    models = models.map((m) => {
+      return m.toUpperCase()
+    })
+    console.log("############## Install", core, models)
     const venv_path = path.join(this.home, "venv")
     let ve = await exists(venv_path)
     if (!ve) {
@@ -297,8 +301,8 @@ class Dalai {
     let engine = this.cores[core]
 
     for(let model of models) {
-      console.log("rm", path.resolve(engine.home, model))
-      await fs.promises.rm(path.resolve(engine.home, model), { recursive: true }).catch((e) => {
+      console.log("rm", path.resolve(engine.home, "models", model))
+      await fs.promises.rm(path.resolve(engine.home, "models", model), { recursive: true }).catch((e) => {
         console.log("# rm", e);
       })
     }
