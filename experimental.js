@@ -337,9 +337,14 @@ class Dalai {
     let engine = this.cores[core]
     let e = await exists(path.resolve(engine.home));
     console.log("mkdir", path.resolve(engine.home))
-    await fs.promises.mkdir(path.resolve(engine.home), { recursive: true }).catch((e) => {
-      console.log("ERROR" ,e)
+
+    await fs.promises.rm(path.resolve(engine.home), { recursive: true }).catch((e) => {
+      console.log("# rm", e);
     })
+
+    // await fs.promises.mkdir(path.resolve(engine.home), { recursive: true }).catch((e) => {
+    //   console.log("ERROR" ,e)
+    // })
 
     try {
       console.log("try fetching", engine.home, engine.url)
