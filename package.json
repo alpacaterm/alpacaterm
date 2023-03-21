@@ -1,5 +1,5 @@
 {
-  "name": "dalai",
+  "name": "alpacaterm",
   "version": "0.2.50",
   "description": "",
   "main": "index.js",
@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dalai:llama": "./dalai llama",
-    "start": "./dalai serve",
+    "start": "node serve",
     "just:run": "wrap () { yarn && yarn dalai:llama $1 && yarn start; }; wrap",
     "just:fix": "npx prettier --write .",
     "postinstall": "node setup"
@@ -34,6 +34,6 @@
     "prettier": "^2.8.4"
   },
   "bin": {
-    "dalai": "bin/cli.js"
+    "alpacaterm": "bin/cli.js"
   }
 }

@@ -1,0 +1,394 @@
+<html>
+<head>
+<title>Alpacaterm</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="/xterm.min.css" rel="stylesheet" />
+<style>
+  body, pre { margin: 0; padding: 0px; color: rgba(0,0,0,0.8); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .input-field {
+  /*
+    border: 2px solid rgba(0,0,0,0.2);
+    */
+    background: rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+  }
+  .logo {
+    text-align: center;
+    padding: 10px;
+  }
+  html {
+    background: rgb(43, 45, 49);
+  }
+  #form {
+    background: rgb(43,45,49);
+    position: fixed;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+  }
+  /*
+  [contenteditable]:empty:not(:focus):before{
+  */
+  [contenteditable]:empty:before{
+    content:attr(data-placeholder);
+    color:grey;
+    font-weight: bold;
+  }
+  #input {
+    padding: 20px;
+    background: rgba(0,0,0,0.3);
+    color: white;
+    white-space: pre-wrap;
+    outline: none;
+    border: none;
+    flex-grow: 1;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  #input:focus { outline: none; }
+  button { padding: 10px; background: rgba(0,0,0,0.8); color: white; border: none; border-radius: 3px; outline: none; box-sizing: border-box; }
+
+  #messages { list-style-type: none; margin: 0; box-sizing: border-box; font-size: 14px; padding: 0; }
+  #messages > li { padding: 10px; font-size: 14px; box-sizing: border-box; }
+  #messages > li:nth-child(odd) { background: #efefef; }
+  li { white-space: pre-wrap; }
+  .loading {
+    margin-bottom: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+    color: rgba(0,0,0,0.7);
+    font-size: 14px;
+    background: #efefef;
+  }
+  .hidden {
+    display: none !important;
+  }
+  /*
+  .input-container {
+    margin: 10px;
+  }
+  */
+  .info {
+    font-size: 12px;
+    text-align: center;
+  }
+  .form-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 10px;
+    /*
+    padding: 10px 20px;
+    */
+  }
+  header {
+  /*
+    background: rgba(0,0,0,0.04);
+    */
+    background: rgb(43, 45, 49);
+    color: white;
+  }
+  .stretch {
+    flex-grow: 1;
+  }
+  input[type=text] , select {
+    border: none;
+    /*
+    background: rgba(0,0,0,0.08);
+    */
+    background: rgba(0,0,0,0.2);
+    color: white;
+    padding: 5px 10px;
+    box-sizing: border-box;
+    width: 100%;
+    /*
+    width: 100px;
+    */
+  }
+  .logo {
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    display: block;
+    font-size: 30px;
+    letter-spacing: -1px;
+    font-weight: bold;
+    font-family: georgia;
+
+  }
+  .config-container {
+  /*
+    width: 200px;
+    justify-content: center;
+    */
+    display: flex;
+  }
+  /*
+  .config-container {
+    display: flex;
+
+    flex-wrap: wrap;
+  }
+  */
+  .kv {
+    display: block;
+    font-size: 14px;
+    margin: 10px;
+    width :150px;
+  }
+  .kv label {
+    display: block;
+    padding: 5px;
+    color: white;
+    font-size: 12px;
+  }
+  body {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+  .container {
+    padding: 30px;
+    box-sizing: border-box;
+    background: rgb(43, 45, 49);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  #terminal {
+    flex-grow: 1;
+  }
+  .xterm .xterm-viewport {
+  }
+  .xterm {
+    box-sizing: border-box;
+  }
+  /*
+        #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+      */
+
+</style>
+</head>
+<body>
+<header>
+  <div class='form-header'></div>
+</header>
+<div class='container'>
+  <div id='terminal'></div>
+</div>
+<form id="form" action="">
+  <div data-placeholder="Ask Alpaca" contenteditable id='input'></div>
+</form>
+<!--
+<pre class='loading hidden'></pre>
+<ul id="messages"></ul>
+-->
+<script src="/socket.io.min.js"></script>
+<script src="./xterm.js"></script>
+<script src="./xterm-addon-fit.js"></script>
+<script src="./xterm-addon-web-links.js"></script>
+<script src="./xterm-theme.js"></script>
+<script>
+class Shell {
+  constructor(selector) {
+    this.buffer = ""
+    this.term = new Terminal({
+//      theme: xtermTheme.AdventureTime,
+      theme: {
+        background: "rgb(43,45,49)",
+      },
+      fontSize: 12,
+      fontFamily: "Menlo, monaco"
+    });
+    const fitAddon = new FitAddon.FitAddon();
+    this.term.loadAddon(fitAddon);
+    this.term.loadAddon(new WebLinksAddon.WebLinksAddon());
+    this.term.open(document.querySelector(selector))
+    fitAddon.fit();
+    this.socket = io();
+  }
+  listen () {
+    this.socket.offAny()
+    this.socket.on('result', async ({ request, response }) => {
+//      loading(false)
+      console.log(response)
+      if (request.method === "installed") {
+        console.log("response", response)
+        if (response == "\n\n<end>") {
+          document.querySelector(".form-header").innerHTML = renderHeader(config)
+        } else {
+          config.models.push(response)
+        }
+      } else {
+        if (response == "\n\n<end>") {
+        } else {
+          this.term.write(response)
+        }
+      }
+    });
+  }
+  connect(req) {
+    console.log("connect", req)
+    this.socket.emit("request", req)
+    this.connected = true
+  }
+  send(cmd) {
+    this.socket.emit("request", {
+      method: "send",
+      args: [cmd]
+    })
+//    for(let line of cmd.split("\n")) {
+//      this.term.write(line)
+//      this.term.write("\n\r")
+//    }
+  }
+  request(req) {
+    console.log("req", req)
+    this.socket.emit("request", req)
+    if (req.prompt) {
+      console.log("req.prompt", req.prompt.split())
+      for(let line of req.prompt.split("\n")) {
+        console.log("LINE", "#" + line + "#")
+        this.term.write(line)
+        this.term.write("\n\r")
+      }
+    }
+  }
+}
+
+const config = {
+  seed: -1,
+  threads: 4,
+  n_predict: 200,
+  top_k: 40,
+  top_p: 0.9,
+  temp: 0.1,
+  repeat_last_n: 64,
+  repeat_penalty: 1.3,
+  debug: false,
+  models: []
+}
+const form = document.getElementById('form');
+const input = document.querySelector('#input');
+const model = document.querySelector('#model');
+const renderHeader = (config) => {
+  console.log("renderHeader", config)
+  const fields = ["n_predict", "repeat_last_n", "repeat_penalty", "top_k", "top_p", "temp", "seed"].map((key) => {
+  //const fields = [{ key: "debug", type: "checkbox" }, "n_predict", "repeat_last_n", "repeat_penalty", "top_k", "top_p", "temp", "seed"].map((key) => {
+    if (typeof key === "string") {
+      return `<div class='kv'>
+<label>${key}</label>
+<input name="${key}" type='text' placeholder="${key}" value="${config[key] || ''}">
+</div>`
+    } else {
+      if (key.type === "checkbox") {
+      return `<div class='kv'>
+<label>${key.key}</label>
+<input name="${key.key}" type='checkbox' ${config[key.key] ? "checked" : ""}>
+</div>`
+      }
+    }
+
+  }).join("")
+
+
+  config.model = config.models[0]
+  const models = config.models.map((model, i) => {
+    return `<option value="${model}" ${i === 0 ? "selected" : ""}>${model}</option>`
+  }).join("")
+console.log("renderHeader", config)
+  shell.connect(config)
+  return `<a class='logo' href="/">Alpacaterm</a>
+  <div class='stretch'></div>
+<div class='config-container'>
+${fields}
+<div class='kv'>
+<label>model</label>
+<select id="model" name="model">${models}</select>
+</div>
+</div>`
+}
+//const loading = (on) => {
+//  if (on) {
+//    document.querySelector(".loading").textContent = on
+//    document.querySelector(".loading").classList.remove("hidden")
+//  } else {
+//    document.querySelector(".loading").textContent = ""
+//    document.querySelector(".loading").classList.add("hidden")
+//  }
+//}
+
+const shell = new Shell("#terminal")
+shell.listen()
+document.querySelector("header").addEventListener("input", (e) => {
+  if (e.target.tagName === "SELECT") {
+    config[e.target.name] = config.models[e.target.selectedIndex]
+  } else if (e.target.type === "checkbox") {
+    config[e.target.name] = e.target.checked
+  } else {
+    config[e.target.name] = e.target.value
+  }
+})
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  e.stopPropagation()
+  if (input.textContent) {
+    //config.prompt = input.textContent.replaceAll("\n", "\\n");
+    config.prompt = input.innerHTML
+    console.log("#"+input.textContent+"#")
+    //config.prompt = input.textContent
+    input.textContent = ""
+//    config.id = "TS-" + Date.now() + "-" + Math.floor(Math.random() * 100000)
+    //shell.request(config)
+    if (shell.connected) {
+      shell.send(config.prompt)
+    } else {
+      shell.connect(config)
+    }
+//    config.id = null
+//    loading(config.prompt)
+//    input.textContent = "";
+  }
+});
+input.addEventListener("keydown", (e) => {
+  if (e.keyCode === 13) {
+    e.preventDefault();
+    if (e.shiftKey) {
+      document.execCommand("insertLineBreak");
+    } else {
+      form.requestSubmit()
+    }
+  }
+})
+
+const sha256 = async (input) => {
+  const textAsBuffer = new TextEncoder().encode(input);
+  const hashBuffer = await window.crypto.subtle.digest("SHA-256", textAsBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hash = hashArray
+    .map((item) => item.toString(16).padStart(2, "0"))
+    .join("");
+  return hash;
+};
+//const say = (msg, id) => {
+//  let item = document.createElement('li');
+//  if (id) item.setAttribute("data-id", id)
+//  item.textContent = msg;
+//  messages.prepend(item);
+//}
+shell.request({
+  method: "installed"
+})
+var div = document.querySelector("[contenteditable]")
+setTimeout(function() {
+  div.focus();
+}, 0);
+</script>
+</body>
+</html>
