@@ -334,6 +334,11 @@ document.querySelector("header").addEventListener("input", (e) => {
   } else {
     config[e.target.name] = e.target.value
   }
+  if (config.model.startsWith("alpaca")) {
+    shell.connect(config)
+  } else {
+    alert("only alpaca supported currently")
+  }
 })
 form.addEventListener('submit', (e) => {
   e.preventDefault();
