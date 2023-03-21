@@ -523,9 +523,7 @@ class Dalai {
               let char = this.queue.shift()
             }
             let queue_string = this.queue.join("")
-            console.log("queue_string", queue_string)
             if (queue_string.includes("## Instruction") || queue_string.includes("## Response") ) {
-              console.log("KILL")
               this.ptyProcess.write('\u0003')
             }
           }
