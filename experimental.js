@@ -338,7 +338,7 @@ class Dalai {
     let e = await exists(path.resolve(engine.home));
     console.log("mkdir", path.resolve(engine.home))
 
-    await fs.promises.rm(path.resolve(engine.home, core), { recursive: true }).catch((e) => {
+    await fs.promises.rm(path.resolve(engine.home), { recursive: true }).catch((e) => {
       console.log("# rm", e);
     })
 
