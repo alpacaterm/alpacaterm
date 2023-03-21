@@ -3,6 +3,8 @@
 <title>Alpacaterm</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="/xterm.min.css" rel="stylesheet" />
+<link href="/css/fontawesome.min.css" rel="stylesheet" />
+<link href="/css/solid.min.css" rel="stylesheet" />
 <style>
   body, pre { margin: 0; padding: 0px; color: rgba(0,0,0,0.8); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   .input-field {
@@ -21,12 +23,51 @@
   html {
     background: rgb(43, 45, 49);
   }
+  header {
+    background: rgb(43, 45, 49);
+    position: fixed;
+    top: 0;
+    left:0;
+    right: 0;
+    transition: max-height 0.2s ease-in-out;
+    max-height: 300px;
+    box-shadow: rgba(255,255,255, 0.04) 0px 1px 2px 0px;
+  /*
+    background: rgba(0,0,0,0.04);
+    */
+    background: rgb(43, 45, 49);
+    color: white;
+    z-index: 100;
+  }
+  header.collapsed {
+    max-height: 0;
+    overflow: hidden;
+  }
   #form {
     background: rgb(43,45,49);
+    margin: 0;
+    display: flex;
+    /*
     position: fixed;
     bottom: 0;
     left: 20px;
     right: 20px;
+    */
+  }
+  #form button:hover {
+    color: yellowgreen;
+  }
+  #form button {
+    padding: 10px 20px;
+    border-radius: 0;
+    border: none;
+    color: white;
+    /*
+    background: rgb(43,45,49);
+    */
+    background: rgba(0,0,0,0.3);
+    box-sizing: border-box;
+    cursor: pointer;
   }
   /*
   [contenteditable]:empty:not(:focus):before{
@@ -48,7 +89,6 @@
     box-sizing: border-box;
   }
   #input:focus { outline: none; }
-  button { padding: 10px; background: rgba(0,0,0,0.8); color: white; border: none; border-radius: 3px; outline: none; box-sizing: border-box; }
 
   #messages { list-style-type: none; margin: 0; box-sizing: border-box; font-size: 14px; padding: 0; }
   #messages > li { padding: 10px; font-size: 14px; box-sizing: border-box; }
@@ -84,13 +124,6 @@
     padding: 10px 20px;
     */
   }
-  header {
-  /*
-    background: rgba(0,0,0,0.04);
-    */
-    background: rgb(43, 45, 49);
-    color: white;
-  }
   .stretch {
     flex-grow: 1;
   }
@@ -124,6 +157,7 @@
     width: 200px;
     justify-content: center;
     */
+    flex-wrap: wrap;
     display: flex;
   }
   /*
@@ -137,7 +171,7 @@
     display: block;
     font-size: 14px;
     margin: 10px;
-    width :150px;
+    width :100px;
   }
   .kv label {
     display: block;
@@ -161,6 +195,13 @@
   #terminal {
     flex-grow: 1;
   }
+  button#configure {
+    background: rgba(0,0,0,0.3);
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: 100px;
+  }
   .xterm .xterm-viewport {
   }
   .xterm {
@@ -176,14 +217,16 @@
 </style>
 </head>
 <body>
-<header>
+<header class='collapsed'>
   <div class='form-header'></div>
 </header>
 <div class='container'>
   <div id='terminal'></div>
 </div>
 <form id="form" action="">
+  <button id='settings'><i class="fa-solid fa-sliders"></i></button>
   <div data-placeholder="Ask Alpaca" contenteditable id='input'></div>
+  <button id='send'><i class="fa-regular fa-paper-plane"></i></button>
 </form>
 <!--
 <pre class='loading hidden'></pre>
@@ -202,6 +245,9 @@ class Shell {
 //      theme: xtermTheme.AdventureTime,
       theme: {
         background: "rgb(43,45,49)",
+      },
+      onWriteParsed: () => {
+        this.term.scrollToBottom()
       },
       fontSize: 12,
       // fontFamily: "Menlo, monaco"
@@ -312,6 +358,7 @@ ${fields}
 <label>model</label>
 <select id="model" name="model">${models}</select>
 </div>
+<button id='configure'>save</button>
 </div>`
 }
 //const loading = (on) => {
@@ -326,6 +373,15 @@ ${fields}
 
 const shell = new Shell("#terminal")
 shell.listen()
+document.querySelector("header").addEventListener("click", (e) => {
+  if (e.target.id === "configure") {
+    if (config.model.startsWith("alpaca")) {
+      shell.connect(config)
+    } else {
+      alert("only alpaca supported currently")
+    }
+  }
+})
 document.querySelector("header").addEventListener("input", (e) => {
   if (e.target.tagName === "SELECT") {
     config[e.target.name] = config.models[e.target.selectedIndex]
@@ -334,11 +390,9 @@ document.querySelector("header").addEventListener("input", (e) => {
   } else {
     config[e.target.name] = e.target.value
   }
-  if (config.model.startsWith("alpaca")) {
-    shell.connect(config)
-  } else {
-    alert("only alpaca supported currently")
-  }
+})
+document.querySelector("#settings").addEventListener("click", async () => {
+  document.querySelector("header").classList.toggle("collapsed")
 })
 form.addEventListener('submit', (e) => {
   e.preventDefault();
