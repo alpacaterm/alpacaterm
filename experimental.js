@@ -295,6 +295,14 @@ class Dalai {
     }
     // first install
     let engine = this.cores[core]
+
+    for(let model of models) {
+      console.log("rm", path.resolve(engine.home, model))
+      await fs.promises.rm(path.resolve(engine.home, model), { recursive: true }).catch((e) => {
+        console.log("# rm", e);
+      })
+    }
+
     let e = await exists(path.resolve(engine.home));
 //    if (e) {
 //      // already exists, no need to install
@@ -338,9 +346,6 @@ class Dalai {
     let e = await exists(path.resolve(engine.home));
     console.log("mkdir", path.resolve(engine.home))
 
-    await fs.promises.rm(path.resolve(engine.home), { recursive: true }).catch((e) => {
-      console.log("# rm", e);
-    })
 
     // await fs.promises.mkdir(path.resolve(engine.home), { recursive: true }).catch((e) => {
     //   console.log("ERROR" ,e)
